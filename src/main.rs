@@ -19,6 +19,7 @@ mod error;
 mod generated_serial_number;
 mod proto;
 mod protocol;
+mod util;
 
 pub const VNT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -64,6 +65,9 @@ pub struct StartArgs {
     /// wg私钥，使用base64编码
     #[arg(long = "wg")]
     wg_secret_key: Option<String>,
+    /// HTTP协议混淆域名
+    #[arg(long = "fake-http")]
+    fake_http_hostname: Option<String>,
 }
 
 #[derive(Clone)]
@@ -80,6 +84,7 @@ pub struct ConfigInfo {
     pub password: String,
     pub wg_secret_key: StaticSecret,
     pub wg_public_key: PublicKey,
+    pub fake_http_hostname: Option<String>,
 }
 impl Debug for ConfigInfo {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -290,6 +295,7 @@ async fn main() {
         password: args.password.unwrap_or_else(|| "admin".into()),
         wg_secret_key,
         wg_public_key,
+        fake_http_hostname: args.fake_http_hostname,
     };
     let rsa = match RsaCipher::new(root_path) {
         Ok(rsa) => {
