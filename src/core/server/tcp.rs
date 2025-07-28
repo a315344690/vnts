@@ -1,12 +1,14 @@
 use crate::core::service::PacketHandler;
 use crate::core::store::cache::VntContext;
 use crate::protocol::NetPacket;
+use crate::util::skip_http_headers;
 use std::io;
 use std::net::SocketAddr;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::tcp::OwnedReadHalf;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc::{channel, Sender};
+use tokio::time::Duration;
 
 const TCP_MAX_PACKET_SIZE: usize = (1 << 24) - 1;
 
@@ -25,6 +27,7 @@ async fn accept(tcp: TcpListener, handler: PacketHandler) -> io::Result<()> {
 }
 
 async fn stream_handle(stream: TcpStream, addr: SocketAddr, handler: PacketHandler) {
+    let mut stream = stream;
     {
         let mut buf = [0u8; 1];
         match stream.peek(&mut buf).await {
@@ -34,12 +37,21 @@ async fn stream_handle(stream: TcpStream, addr: SocketAddr, handler: PacketHandl
                     return;
                 }
                 if buf[0] != 0 {
-                    //可能是ws协议
-                    crate::core::server::websocket::handle_websocket_connection(
-                        stream, addr, handler,
-                    )
-                    .await;
-                    return;
+                    // 检查是否是HTTP请求
+                    if buf[0] == b'G' {
+                        // 可能是HTTP GET请求，尝试跳过HTTP头部
+                        if let Err(e) = skip_http_headers(&mut stream).await {
+                            log::warn!("跳过HTTP头部失败: {:?}", e);
+                            return;
+                        }
+                    } else {
+                        //可能是ws协议
+                        crate::core::server::websocket::handle_websocket_connection(
+                            stream, addr, handler,
+                        )
+                        .await;
+                        return;
+                    }
                 }
             }
             Err(e) => {
