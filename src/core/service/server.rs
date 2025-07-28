@@ -476,6 +476,19 @@ impl ServerPacketHandler {
             }
             res.secret = true;
         }
+        
+        // 处理HTTP混淆协商
+        if req.supports_http_obfuscation {
+            if let Some(hostname) = &self.config.fake_http_hostname {
+                res.http_obfuscation_enabled = true;
+                res.http_hostname = hostname.clone();
+                log::info!("启用HTTP混淆，域名: {}", hostname);
+            } else {
+                res.http_obfuscation_enabled = false;
+                log::info!("客户端支持HTTP混淆，但服务端未配置域名");
+            }
+        }
+        
         let bytes = res.write_to_bytes()?;
         let vec = vec![0u8; 12 + bytes.len() + ENCRYPTION_RESERVED];
         let mut packet = NetPacket::new_encrypt(vec)?;
