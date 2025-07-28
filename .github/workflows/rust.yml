@@ -42,36 +42,9 @@ jobs:
           - TARGET: aarch64-unknown-linux-musl # tested on aws t4g.nano in alpine container
             OS: ubuntu-latest
             FEATURES: normal,web
-          - TARGET: armv7-unknown-linux-musleabihf # raspberry pi 2-3-4, not tested
-            OS: ubuntu-latest
-            FEATURES: normal,web
-          - TARGET: armv7-unknown-linux-musleabi # raspberry pi 2-3-4, not tested
-            OS: ubuntu-latest
-            FEATURES: normal,web
-          - TARGET: arm-unknown-linux-musleabihf # raspberry pi 0-1, not tested
-            OS: ubuntu-latest
-            FEATURES: normal,web
-          - TARGET: arm-unknown-linux-musleabi # raspberry pi 0-1, not tested
-            OS: ubuntu-latest
-            FEATURES: normal,web
-          - TARGET: x86_64-apple-darwin # tested on a mac, is not properly signed so there are security warnings
-            OS: macos-latest
-            FEATURES: ring-cipher,web
           - TARGET: aarch64-apple-darwin # tested on a mac, is not properly signed so there are security warnings
             OS: macos-latest
             FEATURES: ring-cipher,web
-          - TARGET: i686-pc-windows-msvc # tested on a windows machine
-            OS: windows-latest
-            FEATURES: ring-cipher,web
-          - TARGET: x86_64-pc-windows-msvc # tested on a windows machine
-            OS: windows-latest
-            FEATURES: ring-cipher,web
-          - TARGET: mipsel-unknown-linux-musl # openwrt
-            OS: ubuntu-latest
-            FEATURES: normal,web
-          - TARGET: mips-unknown-linux-musl # openwrt
-            OS: ubuntu-latest
-            FEATURES: normal
     # needs: test
     runs-on: ${{ matrix.OS }}
     env:
@@ -96,35 +69,11 @@ jobs:
           # we make cross-compilation
           if [[ $OS =~ ^ubuntu.*$ ]]; then
             sudo apt-get update && sudo apt-get install -qq crossbuild-essential-arm64 crossbuild-essential-armhf musl-tools
-            #  curl -s musl.cc | grep mipsel
             case $TARGET in 
-              mipsel-unknown-linux-musl)
-                MUSL_URI=mipsel-linux-musl-cross
-                ;;
               aarch64-unknown-linux-musl)
                 MUSL_URI=aarch64-linux-musl-cross
                 ;;
-              armv7-unknown-linux-musleabihf)
-                MUSL_URI=armv7l-linux-musleabihf-cross
-                ;;   
-              armv7-unknown-linux-musleabi)
-                MUSL_URI=armv7m-linux-musleabi-cross
-                ;;   
-              arm-unknown-linux-musleabihf)
-                MUSL_URI=arm-linux-musleabihf-cross
-                ;;    
-              arm-unknown-linux-musleabi)
-                MUSL_URI=arm-linux-musleabi-cross
-                ;;     
-              mips-unknown-linux-musl)
-                MUSL_URI=mips-linux-musl-cross
-                ;;
             esac
-            if [[ $TARGET =~ ^mips.*$ ]]; then
-              # mips平台使用1.71.1版本
-              rustup install 1.71.1
-              rustup default 1.71.1  
-            fi
             if [  -n "$MUSL_URI" ]; then
               mkdir -p ./musl_gcc 
               wget -c https://musl.cc/$MUSL_URI.tgz -P ./musl_gcc/
@@ -143,40 +92,10 @@ jobs:
           [target.aarch64-unknown-linux-musl]
           linker = "aarch64-linux-musl-gcc"
           rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.armv7-unknown-linux-gnueabihf]
-          linker = "arm-linux-gnueabihf-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.armv7-unknown-linux-musleabihf]
-          linker = "armv7l-linux-musleabihf-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.armv7-unknown-linux-musleabi]
-          linker = "armv7m-linux-musleabi-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.arm-unknown-linux-gnueabihf]
-          linker = "arm-linux-gnueabihf-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.arm-unknown-linux-musleabihf]
-          linker = "arm-linux-musleabihf-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.arm-unknown-linux-musleabi]
-          linker = "arm-linux-musleabi-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.mipsel-unknown-linux-musl]
-          linker = "mipsel-linux-musl-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.mips-unknown-linux-musl]
-          linker = "mips-linux-musl-gcc"
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
-          [target.x86_64-pc-windows-msvc]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]    
-          [target.i686-pc-windows-msvc]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]      
           [target.x86_64-apple-darwin]
           rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"] 
           [target.aarch64-apple-darwin]
           rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]     
-          [target.i686-unknown-linux-musl]
-          rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]    
           [target.x86_64-unknown-linux-gnu]
           rustflags = ["-C", "target-feature=+crt-static","-C", "strip=symbols"]
           EOF
