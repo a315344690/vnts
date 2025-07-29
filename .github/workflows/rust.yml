@@ -75,10 +75,24 @@ jobs:
                 ;;
             esac
             if [  -n "$MUSL_URI" ]; then
-              mkdir -p ./musl_gcc 
-              wget -c https://github.com/a315344690/Surge/releases/download/v1/aarch64-linux-musl-cross.tgz -P ./musl_gcc/
-              tar xf ./musl_gcc/aarch64-unknown-linux-musl.tar.xz -C ./musl_gcc/
-              sudo ln -s $(pwd)/musl_gcc/aarch64-unknown-linux-musl/bin/*gcc /usr/bin/
+              # 检查是否已经缓存了工具链
+              if [ ! -d "/opt/musl_gcc/aarch64-linux-musl-cross" ]; then
+                mkdir -p /opt/musl_gcc 
+                echo "Downloading musl cross toolchain..."
+                # 使用 curl 替代 wget，设置超时和重试
+                curl -L --connect-timeout 30 --max-time 600 --retry 3 --retry-delay 5 \
+                  -o /opt/musl_gcc/aarch64-linux-musl-cross.tgz \
+                  https://github.com/a315344690/Surge/releases/download/v1/aarch64-linux-musl-cross.tgz
+                
+                echo "Extracting musl cross toolchain..."
+                tar xf /opt/musl_gcc/aarch64-linux-musl-cross.tgz -C /opt/musl_gcc/
+                rm /opt/musl_gcc/aarch64-linux-musl-cross.tgz
+              else
+                echo "Using cached musl cross toolchain"
+              fi
+              
+              # 创建符号链接
+              sudo ln -sf /opt/musl_gcc/aarch64-linux-musl-cross/bin/*gcc /usr/bin/
             fi
           fi
 
