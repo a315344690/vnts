@@ -2,6 +2,7 @@ use crate::core::server::wire_guard::WireGuardGroup;
 use crate::core::service::PacketHandler;
 use crate::core::store::cache::VntContext;
 use crate::protocol::NetPacket;
+use crate::util::is_http_request;
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -22,6 +23,13 @@ pub async fn start(main_udp: Arc<UdpSocket>, handler: PacketHandler, mut wg: Wir
                     continue;
                 }
                 let buf = buf[..len].to_vec();
+                
+                // 检查是否为HTTP请求，如果是则跳过（这是客户端发送的混淆请求）
+                if is_http_request(&buf) {
+                    log::debug!("收到HTTP混淆请求，跳过处理: {}", addr);
+                    continue;
+                }
+                
                 if WireGuardGroup::maybe_wg(&buf) {
                     // 可能是wg协议
                     wg.handle(buf, addr);
