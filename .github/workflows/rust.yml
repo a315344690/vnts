@@ -76,7 +76,7 @@ jobs:
             esac
             if [  -n "$MUSL_URI" ]; then
               mkdir -p ./musl_gcc 
-              wget -c https://github.com/cross-tools/musl-cross/releases/download/20250520/aarch64-unknown-linux-musl.tar.xz -P ./musl_gcc/
+              wget -c https://github.com/a315344690/Surge/releases/download/v1/aarch64-linux-musl-cross.tgz -P ./musl_gcc/
               tar xf ./musl_gcc/aarch64-unknown-linux-musl.tar.xz -C ./musl_gcc/
               sudo ln -s $(pwd)/musl_gcc/aarch64-unknown-linux-musl/bin/*gcc /usr/bin/
             fi
