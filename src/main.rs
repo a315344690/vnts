@@ -103,6 +103,7 @@ impl Debug for ConfigInfo {
                 "wg_public_key",
                 &general_purpose::STANDARD.encode(&self.wg_public_key),
             )
+            .field("fake_http_hostname", &self.fake_http_hostname)
             .finish()
     }
 }
@@ -324,6 +325,12 @@ async fn main() {
         None
     };
     let config = config.clone();
+    
+    // 检查并打印fakehttp hostname
+    if let Some(hostname) = &config.fake_http_hostname {
+        println!("启用HTTP混淆，域名: {}", hostname);
+    }
+    
     if let Err(e) = core::start(
         udp,
         tcp,
