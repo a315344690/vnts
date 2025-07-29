@@ -45,4 +45,20 @@ fn find_http_end(data: &[u8]) -> Option<usize> {
         }
     }
     None
+}
+
+/// 检测是否为HTTP请求
+pub fn is_http_request(data: &[u8]) -> bool {
+    if data.is_empty() {
+        return false;
+    }
+    
+    // 检测是否以HTTP方法开头
+    data.starts_with(b"GET ") || 
+    data.starts_with(b"POST ") || 
+    data.starts_with(b"PUT ") ||
+    data.starts_with(b"DELETE ") ||
+    data.starts_with(b"HEAD ") ||
+    data.starts_with(b"OPTIONS ") ||
+    data.starts_with(b"PATCH ")
 } 
